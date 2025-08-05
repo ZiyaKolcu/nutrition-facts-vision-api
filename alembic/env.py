@@ -10,7 +10,11 @@ from alembic import context
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from app.db.base import Base
-from app.models.models import User, HealthProfile, Scan, Ingredient, Nutrient
+from app.models.user import User
+from app.models.health_profile import HealthProfile
+from app.models.scan import Scan
+from app.models.ingredient import Ingredient
+from app.models.nutrient import Nutrient
 
 from dotenv import load_dotenv
 
