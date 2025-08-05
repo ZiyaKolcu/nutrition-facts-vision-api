@@ -1,0 +1,5 @@
+fastapi[all] 
+sqlalchemy 
+psycopg2 
+alembic 
+python-dotenv
