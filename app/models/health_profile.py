@@ -1,5 +1,5 @@
-from sqlalchemy import Column, ForeignKey, TIMESTAMP, text, String
-from sqlalchemy.dialects.postgresql import UUID, ARRAY
+from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import uuid
 
@@ -11,14 +11,11 @@ class HealthProfile(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("users.id", ondelete="CASCADE"),
-        unique=True,
-        nullable=False,
+        UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, unique=True
     )
-    allergies = Column(ARRAY(String), default=[])
-    chronic_conditions = Column(ARRAY(String), default=[])
-    dietary_preferences = Column(ARRAY(String), default=[])
-    updated_at = Column(TIMESTAMP(timezone=True), server_default=text("now()"))
+    age = Column(Integer, nullable=True)
+    gender = Column(String, nullable=True)
+    height_cm = Column(Integer, nullable=True)
+    weight_kg = Column(Integer, nullable=True)
 
     user = relationship("User", back_populates="health_profile")

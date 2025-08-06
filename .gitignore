@@ -13,3 +13,6 @@ alembic/versions/
 
 */__pycache__/
 
+firebase-adminsdk.json
+test_firebase_direct.py
+test_auth.py

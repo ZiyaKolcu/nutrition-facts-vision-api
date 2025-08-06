@@ -3,3 +3,4 @@ sqlalchemy
 psycopg2 
 alembic 
 python-dotenv
+firebase_admin
