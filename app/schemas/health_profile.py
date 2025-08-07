@@ -21,3 +21,13 @@ class HealthProfileRead(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class HealthProfileUpdate(BaseModel):
+    allergies: List[str] = None
+    chronic_conditions: List[str] = None
+    dietary_preferences: List[str] = None
+    age: int = None
+    gender: str = None
+    height_cm: int = None
+    weight_kg: int = None
