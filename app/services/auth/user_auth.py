@@ -5,7 +5,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from app.models.user import User
 from app.schemas.user import UserCreate
-from app.services.firebase_auth import verify_firebase_token
+from app.services.auth.firebase_auth import verify_firebase_token
 from dotenv import load_dotenv
 
 load_dotenv()
