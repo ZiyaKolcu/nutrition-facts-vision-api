@@ -7,7 +7,7 @@ from app.schemas.health_profile import (
     HealthProfileRead,
     HealthProfileUpdate,
 )
-from app.services import health_profile as hp_service
+from app.services.health_profile import health_profile as hp_service
 
 router = APIRouter()
 
