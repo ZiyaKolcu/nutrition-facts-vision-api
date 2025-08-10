@@ -1,7 +1,7 @@
-from pydantic import BaseModel
-from uuid import UUID
 from datetime import datetime
 from typing import List, Optional
+from uuid import UUID
+from pydantic import BaseModel
 
 
 class ScanCreate(BaseModel):
@@ -27,3 +27,19 @@ class ScanRead(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class AnalyzeRequest(BaseModel):
+    title: str
+    raw_text: str
+    barcode: Optional[str] = None
+
+
+class AnalyzeResponse(BaseModel):
+    scan: ScanRead
+
+
+class ScanListItem(BaseModel):
+    id: UUID
+    product_name: str
+    created_at: datetime

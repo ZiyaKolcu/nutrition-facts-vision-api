@@ -1,7 +1,7 @@
-from typing import Optional
+from typing import List
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_db, get_current_user
@@ -9,7 +9,12 @@ from app.models.user import User
 from app.models.scan import Scan
 from app.models.ingredient import Ingredient
 from app.models.nutrient import Nutrient
-from app.schemas.scan import ScanRead
+from app.schemas.scan import (
+    ScanRead,
+    AnalyzeRequest,
+    AnalyzeResponse,
+    ScanListItem,
+)
 from app.services.nutrition.nutrition_analyzer import analyze_label_for_user
 from app.services.nutrition.label_parser import parse_ocr_raw_text
 from app.services.nutrition.health_risk_assessor import assess_ingredient_risks
@@ -17,16 +22,6 @@ from app.services.health_profile import health_profile as hp_service
 
 
 router = APIRouter()
-
-
-class AnalyzeRequest(BaseModel):
-    title: str
-    raw_text: str
-    barcode: Optional[str] = None
-
-
-class AnalyzeResponse(BaseModel):
-    scan: ScanRead
 
 
 @router.post(
@@ -79,7 +74,7 @@ def analyze_label(
         summary_risk=summary_risk,
     )
     db.add(scan)
-    db.flush()  
+    db.flush()
 
     for name in ingredients_list:
         db.add(Ingredient(scan_id=scan.id, name=name, risk_level=risk_map.get(name)))
@@ -110,3 +105,39 @@ def analyze_label(
     db.refresh(scan)
 
     return AnalyzeResponse(scan=ScanRead.from_orm(scan))
+
+
+@router.get("/me", response_model=List[ScanListItem])
+def get_all_scans_by_user_id(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    scans = (
+        db.query(Scan.id, Scan.product_name, Scan.created_at)
+        .filter(Scan.user_id == current_user.id)
+        .order_by(Scan.created_at.desc())
+        .all()
+    )
+    return [
+        {"id": scan_id, "product_name": product_name, "created_at": created_at}
+        for scan_id, product_name, created_at in scans
+    ]
+
+
+@router.delete("/{scan_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_scan_by_scan_id(
+    scan_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    scan = (
+        db.query(Scan)
+        .filter(Scan.id == scan_id, Scan.user_id == current_user.id)
+        .first()
+    )
+    if not scan:
+        raise HTTPException(status_code=404, detail="Scan not found")
+
+    db.delete(scan)
+    db.commit()
+    return None
