@@ -15,6 +15,6 @@ class Nutrient(Base):
     )
     label = Column(String, nullable=False)
     value = Column(Numeric, nullable=False)
-    max_value = Column(Numeric, nullable=False)
+    max_value = Column(Numeric, nullable=True)
 
     scan = relationship("Scan", back_populates="nutrients")
