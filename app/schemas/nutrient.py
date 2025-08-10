@@ -17,4 +17,4 @@ class NutrientRead(BaseModel):
     max_value: float
 
     class Config:
-        orm_mode = True
+        from_attributes = True
