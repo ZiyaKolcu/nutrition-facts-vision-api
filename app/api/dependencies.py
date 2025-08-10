@@ -3,7 +3,7 @@
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
-from app.services.user_auth import authenticate_user
+from app.services.auth.user_auth import authenticate_user
 from app.models.user import User
 
 

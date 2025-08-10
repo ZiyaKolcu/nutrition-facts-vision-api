@@ -1,6 +1,7 @@
-fastapi[all] 
-sqlalchemy 
-psycopg2 
-alembic 
+fastapi[all]
+sqlalchemy
+psycopg2
+alembic
 python-dotenv
 firebase_admin
+openai

@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1 import auth
 from app.api.v1 import health_profile
+from app.api.v1 import scan
 
 load_dotenv()
 
@@ -26,6 +27,7 @@ app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
 app.include_router(
     health_profile.router, prefix="/api/v1/health-profile", tags=["Health Profile"]
 )
+app.include_router(scan.router, prefix="/api/v1/scans", tags=["Scans"])
 
 
 @app.get("/")
