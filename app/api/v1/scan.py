@@ -14,6 +14,9 @@ from app.schemas.scan import (
     AnalyzeRequest,
     AnalyzeResponse,
     ScanListItem,
+    ScanDetailResponse,  
+    ScanDetailIngredient,  
+    ScanDetailNutrient,  
 )
 from app.services.nutrition.nutrition_analyzer import analyze_label_for_user
 from app.services.nutrition.label_parser import parse_ocr_raw_text
@@ -122,6 +125,49 @@ def get_all_scans_by_user_id(
         {"id": scan_id, "product_name": product_name, "created_at": created_at}
         for scan_id, product_name, created_at in scans
     ]
+
+
+@router.get("/{scan_id}", response_model=ScanDetailResponse)
+def get_scan_by_scan_id(
+    scan_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Retrieve detailed scan information for a given scan_id, including:
+    - summary_explanation from scans table
+    - all ingredients (name, risk_level) for this scan
+    - all nutrients (label, value) for this scan
+    Only allows access to scans belonging to the current user.
+    """
+    scan = (
+        db.query(Scan)
+        .filter(Scan.id == scan_id, Scan.user_id == current_user.id)
+        .first()
+    )
+    if not scan:
+        raise HTTPException(status_code=404, detail="Scan not found")
+
+    # Fetch ingredients for this scan
+    ingredients = db.query(Ingredient).filter(Ingredient.scan_id == scan_id).all()
+    ingredient_list = [
+        ScanDetailIngredient(name=ing.name, risk_level=ing.risk_level)
+        for ing in ingredients
+    ]
+
+    # Fetch nutrients for this scan
+    nutrients = db.query(Nutrient).filter(Nutrient.scan_id == scan_id).all()
+    nutrient_list = [
+        ScanDetailNutrient(label=nut.label, value=float(nut.value)) for nut in nutrients
+    ]
+
+    return ScanDetailResponse(
+        id=scan.id,
+        product_name=scan.product_name,
+        summary_explanation=scan.summary_explanation,
+        ingredients=ingredient_list,
+        nutrients=nutrient_list,
+    )
 
 
 @router.delete("/{scan_id}", status_code=status.HTTP_204_NO_CONTENT)

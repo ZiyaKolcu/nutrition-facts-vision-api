@@ -43,3 +43,21 @@ class ScanListItem(BaseModel):
     id: UUID
     product_name: str
     created_at: datetime
+
+
+class ScanDetailIngredient(BaseModel):
+    name: str
+    risk_level: str
+
+
+class ScanDetailNutrient(BaseModel):
+    label: str
+    value: float
+
+
+class ScanDetailResponse(BaseModel):
+    id: UUID
+    product_name: str
+    summary_explanation: Optional[str]
+    ingredients: List[ScanDetailIngredient]
+    nutrients: List[ScanDetailNutrient]
