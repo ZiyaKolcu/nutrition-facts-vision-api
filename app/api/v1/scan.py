@@ -14,9 +14,9 @@ from app.schemas.scan import (
     AnalyzeRequest,
     AnalyzeResponse,
     ScanListItem,
-    ScanDetailResponse,  
-    ScanDetailIngredient,  
-    ScanDetailNutrient,  
+    ScanDetailResponse,
+    ScanDetailIngredient,
+    ScanDetailNutrient,
 )
 from app.services.nutrition.nutrition_analyzer import analyze_label_for_user
 from app.services.nutrition.label_parser import parse_ocr_raw_text
@@ -107,7 +107,7 @@ def analyze_label(
     db.commit()
     db.refresh(scan)
 
-    return AnalyzeResponse(scan=ScanRead.from_orm(scan))
+    return AnalyzeResponse(scan=ScanRead.model_validate(scan))
 
 
 @router.get("/me", response_model=List[ScanListItem])

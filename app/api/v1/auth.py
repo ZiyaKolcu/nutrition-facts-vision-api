@@ -43,7 +43,7 @@ async def authenticate_user_endpoint(
         user = authenticate_user(db, auth_request.id_token)
 
         return AuthResponse(
-            user=UserRead.from_orm(user), message="Authentication successful"
+            user=UserRead.model_validate(user), message="Authentication successful"
         )
 
     except HTTPException:
@@ -66,4 +66,4 @@ async def get_current_user_endpoint(current_user: User = Depends(get_current_use
     Returns:
         UserRead: Current user information
     """
-    return UserRead.from_orm(current_user)
+    return UserRead.model_validate(current_user)
