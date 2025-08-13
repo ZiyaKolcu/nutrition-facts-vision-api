@@ -15,6 +15,7 @@ from app.models.health_profile import HealthProfile
 from app.models.scan import Scan
 from app.models.ingredient import Ingredient
 from app.models.nutrient import Nutrient
+from app.models.chat_with_ai import ChatWithAI
 
 from dotenv import load_dotenv
 

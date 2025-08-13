@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1 import auth
 from app.api.v1 import health_profile
 from app.api.v1 import scan
+from app.api.v1 import chat
 
 load_dotenv()
 
@@ -28,6 +29,7 @@ app.include_router(
     health_profile.router, prefix="/api/v1/health-profile", tags=["Health Profile"]
 )
 app.include_router(scan.router, prefix="/api/v1/scans", tags=["Scans"])
+app.include_router(chat.router, prefix="/api/v1/chat", tags=["Chat"])
 
 
 @app.get("/")
