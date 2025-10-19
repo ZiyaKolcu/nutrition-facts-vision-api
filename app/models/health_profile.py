@@ -14,12 +14,12 @@ class HealthProfile(Base):
     user_id = Column(
         UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, unique=True
     )
-    age = Column(Integer, nullable=True)
+    birth_of_date = Column(DateTime(timezone=True), nullable=True)
     gender = Column(String, nullable=True)
     height_cm = Column(Integer, nullable=True)
     weight_kg = Column(Integer, nullable=True)
     allergies = Column(JSONB, nullable=False, default=list)
-    chronic_conditions = Column(JSONB, nullable=False, default=list)
+    health_conditions = Column(JSONB, nullable=False, default=list)
     dietary_preferences = Column(JSONB, nullable=False, default=list)
     updated_at = Column(
         DateTime(timezone=True),
@@ -29,3 +29,4 @@ class HealthProfile(Base):
     )
 
     user = relationship("User", back_populates="health_profile")
+    
