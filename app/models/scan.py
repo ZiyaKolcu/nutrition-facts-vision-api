@@ -12,7 +12,6 @@ class Scan(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     product_name = Column(String, nullable=False)
-    barcode = Column(String, nullable=True)
     raw_text = Column(Text, nullable=False)
     parsed_ingredients = Column(JSONB, nullable=False, default=list)
     summary_explanation = Column(Text, nullable=True)
