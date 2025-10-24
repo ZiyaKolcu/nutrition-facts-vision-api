@@ -12,7 +12,7 @@ def create_health_profile(db: Session, profile_in: HealthProfileCreate):
     db_profile = HealthProfile(
         user_id=profile_in.user_id,
         allergies=profile_in.allergies,
-        chronic_conditions=profile_in.chronic_conditions,
+        health_conditions=profile_in.health_conditions,
         dietary_preferences=profile_in.dietary_preferences,
     )
     db.add(db_profile)
