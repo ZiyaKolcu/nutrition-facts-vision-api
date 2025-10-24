@@ -42,7 +42,7 @@ def build_system_prompt_unified() -> str:
         "you will: (1) extract a cleaned ingredients list as an array of strings, (2) extract a "
         "structured nutrition object for per_100g and per_portion when available, (3) classify "
         "each ingredient's risk as one of 'Low', 'Medium', or 'High' considering the user's health "
-        "profile if provided (allergies, chronic conditions, dietary preferences), and (4) write a brief "
+        "profile if provided (allergies, health conditions, dietary preferences), and (4) write a brief "
         "summary_explanation and an overall summary_risk as one of 'Low', 'Medium', or 'High'. "
         "If any ingredient matches a user allergy, its risk MUST be 'High'. Return STRICT JSON only with keys: "
         "ingredients (array), nutrition (object), risks (object), summary_explanation (string), summary_risk (string)."
@@ -79,7 +79,7 @@ def build_system_prompt_risk() -> str:
     return (
         "You are a nutrition safety assistant. Given a list of ingredient names, classify EACH "
         'ingredient\'s risk level as one of "Low", "Medium", or "High" strictly. Consider health '
-        "profile if provided (allergies, chronic conditions, dietary preferences). If an ingredient "
+        "profile if provided (allergies, health conditions, dietary preferences). If an ingredient "
         'matches any user allergy, it MUST be labeled "High". Return STRICT JSON mapping ingredient '
         'to risk label. Example:\n{\n  "Sugar": "Medium",\n  "Peanuts": "High"\n}'
     )

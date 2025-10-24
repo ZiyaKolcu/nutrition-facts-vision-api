@@ -50,12 +50,12 @@ def assess_ingredient_risks(
     profile_text = ""
     if health_profile:
         allergies = health_profile.get("allergies") or []
-        chronic = health_profile.get("chronic_conditions") or []
+        health_conditions = health_profile.get("health_conditions") or []
         prefs = health_profile.get("dietary_preferences") or []
         profile_text = (
             "User health profile:\n"
             f"Allergies: {', '.join(allergies) if allergies else 'None'}\n"
-            f"Chronic conditions: {', '.join(chronic) if chronic else 'None'}\n"
+            f"Health conditions: {', '.join(health_conditions) if health_conditions else 'None'}\n"
             f"Dietary preferences: {', '.join(prefs) if prefs else 'None'}\n\n"
         )
 

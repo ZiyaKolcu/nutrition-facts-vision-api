@@ -19,12 +19,12 @@ def _profile_to_text(profile: Optional[Dict[str, Any]]) -> str:
     if not profile:
         return ""
     allergies = profile.get("allergies") or []
-    chronic = profile.get("chronic_conditions") or []
+    health_conditions = profile.get("health_conditions") or []
     prefs = profile.get("dietary_preferences") or []
     return (
         "User health profile:\n"
         f"Allergies: {', '.join(allergies) if allergies else 'None'}\n"
-        f"Chronic conditions: {', '.join(chronic) if chronic else 'None'}\n"
+        f"Health conditions: {', '.join(health_conditions) if health_conditions else 'None'}\n"
         f"Dietary preferences: {', '.join(prefs) if prefs else 'None'}\n\n"
     )
 
@@ -97,7 +97,7 @@ def analyze_label_for_user(db: "Session", user_id: "UUID", raw_text: str) -> Tup
     if profile:
         profile_dict = {
             "allergies": profile.allergies or [],
-            "chronic_conditions": profile.chronic_conditions or [],
+            "health_conditions": profile.health_conditions or [],
             "dietary_preferences": profile.dietary_preferences or [],
         }
     return analyze_label_with_profile(raw_text, profile_dict)
