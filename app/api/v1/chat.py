@@ -74,7 +74,7 @@ def post_chat_message(
     if profile:
         profile_dict = {
             "allergies": profile.allergies or [],
-            "chronic_conditions": profile.chronic_conditions or [],
+            "health_conditions": profile.health_conditions or [],
             "dietary_preferences": profile.dietary_preferences or [],
         }
 

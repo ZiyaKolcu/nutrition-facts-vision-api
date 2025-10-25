@@ -70,7 +70,6 @@ def analyze_label(
     scan = Scan(
         user_id=current_user.id,
         product_name=body.title,
-        barcode=body.barcode,
         raw_text=body.raw_text,
         parsed_ingredients=ingredients_list,
         summary_explanation=summary_explanation,

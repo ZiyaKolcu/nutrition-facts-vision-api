@@ -7,7 +7,6 @@ from pydantic import BaseModel, ConfigDict
 class ScanCreate(BaseModel):
     user_id: UUID
     product_name: str
-    barcode: Optional[str] = None
     raw_text: str
     parsed_ingredients: List[str]
     summary_explanation: Optional[str] = None
@@ -18,7 +17,6 @@ class ScanRead(BaseModel):
     id: UUID
     user_id: UUID
     product_name: str
-    barcode: Optional[str]
     raw_text: str
     parsed_ingredients: List[str]
     summary_explanation: Optional[str]
@@ -31,7 +29,6 @@ class ScanRead(BaseModel):
 class AnalyzeRequest(BaseModel):
     title: str
     raw_text: str
-    barcode: Optional[str] = None
 
 
 class AnalyzeResponse(BaseModel):
