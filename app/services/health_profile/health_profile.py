@@ -14,6 +14,10 @@ def create_health_profile(db: Session, profile_in: HealthProfileCreate):
         allergies=profile_in.allergies,
         health_conditions=profile_in.health_conditions,
         dietary_preferences=profile_in.dietary_preferences,
+        gender=profile_in.gender,
+        date_of_birth=profile_in.date_of_birth,
+        height_cm=profile_in.height_cm,
+        weight_kg=profile_in.weight_kg,
     )
     db.add(db_profile)
     db.commit()
@@ -24,9 +28,11 @@ def create_health_profile(db: Session, profile_in: HealthProfileCreate):
 def update_health_profile(
     db: Session, db_profile: HealthProfile, profile_in: HealthProfileUpdate
 ):
-    update_data = profile_in.dict(exclude_unset=True)
+    update_data = profile_in.model_dump(exclude_unset=True)
+    
     for field, value in update_data.items():
         setattr(db_profile, field, value)
+    
     db.commit()
     db.refresh(db_profile)
     return db_profile

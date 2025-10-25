@@ -1,7 +1,7 @@
 from pydantic import BaseModel, ConfigDict
 from uuid import UUID
-from datetime import datetime
-from typing import List
+from datetime import datetime, date
+from typing import List, Optional
 
 
 class HealthProfileCreate(BaseModel):
@@ -9,6 +9,10 @@ class HealthProfileCreate(BaseModel):
     allergies: List[str] = []
     health_conditions: List[str] = []
     dietary_preferences: List[str] = []
+    gender: Optional[str] = None
+    date_of_birth: Optional[date] = None
+    height_cm: Optional[int] = None
+    weight_kg: Optional[int] = None
 
 
 class HealthProfileRead(BaseModel):
@@ -17,16 +21,20 @@ class HealthProfileRead(BaseModel):
     allergies: List[str]
     health_conditions: List[str]
     dietary_preferences: List[str]
+    gender: Optional[str] = None
+    date_of_birth: Optional[date] = None
+    height_cm: Optional[int] = None
+    weight_kg: Optional[int] = None
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class HealthProfileUpdate(BaseModel):
-    allergies: List[str] = None
-    health_conditions: List[str] = None
-    dietary_preferences: List[str] = None
-    age: int = None
-    gender: str = None
-    height_cm: int = None
-    weight_kg: int = None
+    allergies: Optional[List[str]] = None
+    health_conditions: Optional[List[str]] = None
+    dietary_preferences: Optional[List[str]] = None
+    gender: Optional[str] = None
+    date_of_birth: Optional[date] = None
+    height_cm: Optional[int] = None
+    weight_kg: Optional[int] = None

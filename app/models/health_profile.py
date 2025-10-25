@@ -14,7 +14,7 @@ class HealthProfile(Base):
     user_id = Column(
         UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, unique=True
     )
-    birth_of_date = Column(DateTime(timezone=True), nullable=True)
+    date_of_birth = Column(DateTime(timezone=True), nullable=True)
     gender = Column(String, nullable=True)
     height_cm = Column(Integer, nullable=True)
     weight_kg = Column(Integer, nullable=True)
