@@ -42,7 +42,9 @@ def analyze_label(
             risk_map,
             summary_explanation,
             summary_risk,
-        ) = analyze_label_for_user(db, current_user.id, body.raw_text)
+        ) = analyze_label_for_user(
+            db, current_user.id, body.raw_text, language=body.language
+        )
     except ValueError:
         try:
             ingredients_list, nutrition_map = parse_ocr_raw_text(body.raw_text)
@@ -60,7 +62,7 @@ def analyze_label(
             }
         try:
             risk_map = assess_ingredient_risks(
-                ingredients_list, health_profile=profile_dict
+                ingredients_list, health_profile=profile_dict, language=body.language
             )
         except ValueError:
             risk_map = {name: "Low" for name in ingredients_list}

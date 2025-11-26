@@ -83,6 +83,7 @@ def post_chat_message(
         ingredients=scan.parsed_ingredients or [],
         summary_explanation=scan.summary_explanation,
         profile_dict=profile_dict,
+        language=body.language if body else "en",
     )
 
     history: List[ChatWithAI] = (

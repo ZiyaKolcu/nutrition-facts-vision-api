@@ -14,16 +14,33 @@ from openai import (
 from app.services.nutrition.openai_client import OPENAI_MODEL
 
 
+def _get_language_name(language_code: str) -> str:
+    """Convert language code to language name."""
+    language_map = {
+        "en": "English",
+        "tr": "Turkish",
+    }
+    return language_map.get(language_code, "English")
+
+
 def build_chat_system_prompt(
     product_name: str,
     ingredients: List[str],
     summary_explanation: Optional[str],
     profile_dict: Optional[dict],
+    language: str = "en",
 ) -> str:
     """Build a concise system prompt for assistant-style replies.
 
     The assistant should answer briefly, focus on the scanned product, and tailor
     guidance to the provided health profile (allergies, chronic conditions, dietary preferences).
+
+    Args:
+        product_name: Name of the scanned product
+        ingredients: List of ingredients
+        summary_explanation: Summary of the analysis
+        profile_dict: User's health profile
+        language: Language code for response ('en', 'tr', etc.)
     """
     lines: List[str] = []
     lines.append("You are a concise nutrition assistant for a single scanned product.")
@@ -47,6 +64,7 @@ def build_chat_system_prompt(
         lines.append(f"Chronic conditions: {conditions or 'None'}")
         lines.append(f"Dietary preferences: {prefs or 'None'}")
     lines.append("Keep replies under ~2 sentences unless asked to elaborate.")
+    lines.append(f"Respond in {_get_language_name(language)}.")
     return "\n".join(lines)
 
 

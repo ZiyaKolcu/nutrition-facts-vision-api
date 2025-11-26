@@ -41,11 +41,18 @@ def _is_allergen_match(ingredient_name: str, allergy_terms: List[str]) -> bool:
 
 
 def assess_ingredient_risks(
-    ingredients: List[str], health_profile: Optional[Dict[str, Any]] = None
+    ingredients: List[str],
+    health_profile: Optional[Dict[str, Any]] = None,
+    language: str = "en",
 ) -> Dict[str, str]:
     """Classify each ingredient risk level as one of: "Low", "Medium", "High".
 
     Deterministic override: if an ingredient matches any user allergy, label "High".
+
+    Args:
+        ingredients: List of ingredient names to assess
+        health_profile: User's health profile (allergies, conditions, preferences)
+        language: Language code for response ('en', 'tr', etc.)
     """
     profile_text = ""
     if health_profile:
@@ -59,7 +66,7 @@ def assess_ingredient_risks(
             f"Dietary preferences: {', '.join(prefs) if prefs else 'None'}\n\n"
         )
 
-    system_prompt = build_system_prompt_risk()
+    system_prompt = build_system_prompt_risk(language=language)
     user_prompt = build_user_prompt_risk(ingredients, profile_text)
 
     data = call_openai_json(system_prompt, user_prompt)

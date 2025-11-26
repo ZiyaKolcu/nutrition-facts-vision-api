@@ -26,6 +26,7 @@ class ChatRequest(BaseModel):
     """Incoming chat message payload."""
 
     message: str
+    language: str
 
 
 class ChatPostResponse(BaseModel):

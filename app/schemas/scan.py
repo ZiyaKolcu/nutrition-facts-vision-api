@@ -29,6 +29,7 @@ class ScanRead(BaseModel):
 class AnalyzeRequest(BaseModel):
     title: str
     raw_text: str
+    language: str 
 
 
 class AnalyzeResponse(BaseModel):

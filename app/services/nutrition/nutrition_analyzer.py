@@ -30,7 +30,7 @@ def _profile_to_text(profile: Optional[Dict[str, Any]]) -> str:
 
 
 def analyze_label_with_profile(
-    raw_text: str, health_profile: Optional[Dict[str, Any]]
+    raw_text: str, health_profile: Optional[Dict[str, Any]], language: str = "en"
 ) -> Tuple[
     List[str],
     Dict[str, Dict[str, Optional[float]]],
@@ -40,9 +40,16 @@ def analyze_label_with_profile(
 ]:
     """Single-call analysis that returns ingredients, normalized nutrition map,
     ingredient risk labels, a short explanation, and an overall risk.
+
+    Args:
+        raw_text: Raw OCR text from label
+        health_profile: User's health profile (allergies, conditions, preferences)
+        language: Language code for response ('en', 'tr', etc.)
     """
-    system_prompt = build_system_prompt_unified()
-    user_prompt = build_user_prompt_unified(raw_text, _profile_to_text(health_profile))
+    system_prompt = build_system_prompt_unified(language=language)
+    user_prompt = build_user_prompt_unified(
+        raw_text, _profile_to_text(health_profile), language=language
+    )
     data = call_openai_json(system_prompt, user_prompt)
 
     ingredients_list: List[str] = []
@@ -84,14 +91,23 @@ def analyze_label_with_profile(
     return ingredients_list, normalized, risks, summary_explanation, summary_risk
 
 
-
-def analyze_label_for_user(db: "Session", user_id: "UUID", raw_text: str) -> Tuple[
+def analyze_label_for_user(
+    db: "Session", user_id: "UUID", raw_text: str, language: str = "en"
+) -> Tuple[
     List[str],
     Dict[str, Dict[str, Optional[float]]],
     Dict[str, str],
     str,
     str,
 ]:
+    """Analyze label for a specific user with their health profile.
+
+    Args:
+        db: Database session
+        user_id: User ID
+        raw_text: Raw OCR text from label
+        language: Language code for response ('en', 'tr', etc.)
+    """
     profile = hp_service.get_health_profile_by_user(db, user_id)
     profile_dict: Optional[Dict[str, Any]] = None
     if profile:
@@ -100,5 +116,4 @@ def analyze_label_for_user(db: "Session", user_id: "UUID", raw_text: str) -> Tup
             "health_conditions": profile.health_conditions or [],
             "dietary_preferences": profile.dietary_preferences or [],
         }
-    return analyze_label_with_profile(raw_text, profile_dict)
-
+    return analyze_label_with_profile(raw_text, profile_dict, language=language)
