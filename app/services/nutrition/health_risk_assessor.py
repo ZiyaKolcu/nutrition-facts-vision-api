@@ -70,6 +70,14 @@ def assess_ingredient_risks(
     user_prompt = build_user_prompt_risk(ingredients, profile_text)
 
     data = call_openai_json(system_prompt, user_prompt)
+
+    # Handle case where data might be a JSON string
+    if isinstance(data, str):
+        try:
+            data = json.loads(data)
+        except (json.JSONDecodeError, ValueError):
+            data = {}
+
     risks: Dict[str, str] = {}
     if isinstance(data, dict):
         for name, label in data.items():

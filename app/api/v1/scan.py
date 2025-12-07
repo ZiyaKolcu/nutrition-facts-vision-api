@@ -35,23 +35,65 @@ def analyze_label(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    # Initialize variables with safe defaults
+    ingredients_list = []
+    nutrition_map = {}
+    risk_map = {}
+    summary_explanation = None
+    summary_risk = None
+
     try:
-        (
-            ingredients_list,
-            nutrition_map,
-            risk_map,
-            summary_explanation,
-            summary_risk,
-        ) = analyze_label_for_user(
+        result = analyze_label_for_user(
             db, current_user.id, body.raw_text, language=body.language
         )
-    except ValueError:
+        # Safely unpack the result
+        if isinstance(result, tuple) and len(result) == 5:
+            (
+                ingredients_list,
+                nutrition_map,
+                risk_map,
+                summary_explanation,
+                summary_risk,
+            ) = result
+
+            # Validate and fix ingredients_list immediately
+            if not isinstance(ingredients_list, list):
+                if isinstance(ingredients_list, str):
+                    ingredients_list = [
+                        token.strip()
+                        for token in ingredients_list.split(",")
+                        if token.strip()
+                    ]
+                else:
+                    ingredients_list = []
+        else:
+            raise ValueError(
+                f"Unexpected result format from analyze_label_for_user: {type(result)}, length: {len(result) if isinstance(result, (tuple, list)) else 'N/A'}"
+            )
+    except ValueError as e:
         try:
             ingredients_list, nutrition_map = parse_ocr_raw_text(body.raw_text)
+
+            # Validate and fix ingredients_list immediately
+            if not isinstance(ingredients_list, list):
+                if isinstance(ingredients_list, str):
+                    ingredients_list = [
+                        token.strip()
+                        for token in ingredients_list.split(",")
+                        if token.strip()
+                    ]
+                else:
+                    ingredients_list = []
+
         except ValueError as parsing_error:
             raise HTTPException(
                 status_code=502, detail=f"Parsing failed: {parsing_error}"
             ) from parsing_error
+        except Exception as unexpected_error:
+            raise HTTPException(
+                status_code=500, detail=f"Unexpected parsing error: {unexpected_error}"
+            ) from unexpected_error
+
         profile = hp_service.get_health_profile_by_user(db, current_user.id)
         profile_dict = None
         if profile:
@@ -66,8 +108,41 @@ def analyze_label(
             )
         except ValueError:
             risk_map = {name: "Low" for name in ingredients_list}
+        except Exception as risk_error:
+            # Fallback to Low risk for all ingredients
+            risk_map = {name: "Low" for name in ingredients_list}
+
         summary_explanation = None
         summary_risk = None
+    except Exception as unexpected_error:
+        raise HTTPException(
+            status_code=500, detail=f"Unexpected analysis error: {unexpected_error}"
+        ) from unexpected_error
+
+    # Validate and fix data structures
+    if not isinstance(ingredients_list, list):
+        # Try to convert to list if it's a string
+        if isinstance(ingredients_list, str):
+            ingredients_list = [
+                token.strip() for token in ingredients_list.split(",") if token.strip()
+            ]
+        else:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Invalid ingredients_list type: expected list, got {type(ingredients_list).__name__}",
+            )
+
+    if not isinstance(nutrition_map, dict):
+        raise HTTPException(
+            status_code=500,
+            detail=f"Invalid nutrition_map type: expected dict, got {type(nutrition_map).__name__}. Value: {str(nutrition_map)[:200]}",
+        )
+
+    if not isinstance(risk_map, dict):
+        raise HTTPException(
+            status_code=500,
+            detail=f"Invalid risk_map type: expected dict, got {type(risk_map).__name__}. Value: {str(risk_map)[:200]}",
+        )
 
     scan = Scan(
         user_id=current_user.id,
@@ -83,27 +158,26 @@ def analyze_label(
     for name in ingredients_list:
         db.add(Ingredient(scan_id=scan.id, name=name, risk_level=risk_map.get(name)))
 
-    for label, values in nutrition_map.items():
-        per_100g = values.get("per_100g")
-        per_portion = values.get("per_portion")
-        if per_100g is not None:
-            db.add(
-                Nutrient(
-                    scan_id=scan.id,
-                    label=f"{label}_per_100g",
-                    value=per_100g,
-                    max_value=None,
+    # Extract nutrition values from the normalized structure
+    # Handle case where nutrition_map might not be a dict
+    if isinstance(nutrition_map, dict):
+        nutrition_values = nutrition_map.get("values", {})
+        if isinstance(nutrition_values, dict):
+            for label, value in nutrition_values.items():
+                # Skip None values and the 'micros' dict
+                if value is None or label == "micros":
+                    continue
+                # Handle micros separately if needed
+                if isinstance(value, dict):
+                    continue
+                db.add(
+                    Nutrient(
+                        scan_id=scan.id,
+                        label=label,
+                        value=value,
+                        max_value=None,
+                    )
                 )
-            )
-        if per_portion is not None:
-            db.add(
-                Nutrient(
-                    scan_id=scan.id,
-                    label=f"{label}_per_portion",
-                    value=per_portion,
-                    max_value=None,
-                )
-            )
 
     db.commit()
     db.refresh(scan)

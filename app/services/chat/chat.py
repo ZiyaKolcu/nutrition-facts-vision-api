@@ -20,7 +20,7 @@ def _get_language_name(language_code: str) -> str:
         "en": "English",
         "tr": "Turkish",
     }
-    return language_map.get(language_code, "English")
+    return language_map.get(language_code.lower(), "English")
 
 
 def build_chat_system_prompt(
@@ -64,7 +64,7 @@ def build_chat_system_prompt(
         lines.append(f"Chronic conditions: {conditions or 'None'}")
         lines.append(f"Dietary preferences: {prefs or 'None'}")
     lines.append("Keep replies under ~2 sentences unless asked to elaborate.")
-    lines.append(f"Respond in {_get_language_name(language)}.")
+    lines.append(f"CRITICAL: You MUST respond in {_get_language_name(language)}.")
     return "\n".join(lines)
 
 

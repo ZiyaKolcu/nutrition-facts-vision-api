@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
 from sqlalchemy.orm import Session
@@ -33,18 +34,13 @@ def analyze_label_with_profile(
     raw_text: str, health_profile: Optional[Dict[str, Any]], language: str = "en"
 ) -> Tuple[
     List[str],
-    Dict[str, Dict[str, Optional[float]]],
+    Dict[str, Any],
     Dict[str, str],
     str,
     str,
 ]:
     """Single-call analysis that returns ingredients, normalized nutrition map,
     ingredient risk labels, a short explanation, and an overall risk.
-
-    Args:
-        raw_text: Raw OCR text from label
-        health_profile: User's health profile (allergies, conditions, preferences)
-        language: Language code for response ('en', 'tr', etc.)
     """
     system_prompt = build_system_prompt_unified(language=language)
     user_prompt = build_user_prompt_unified(
@@ -52,20 +48,51 @@ def analyze_label_with_profile(
     )
     data = call_openai_json(system_prompt, user_prompt)
 
+    # Handle ingredients - could be a list, string, or other type
     ingredients_list: List[str] = []
-    if isinstance(data.get("ingredients"), list):
+    ingredients_data = data.get("ingredients")
+
+    if isinstance(ingredients_data, list):
         ingredients_list = [
             str(token).strip()
-            for token in data["ingredients"]
+            for token in ingredients_data
             if isinstance(token, (str, int, float)) and str(token).strip()
         ]
+    elif isinstance(ingredients_data, str):
+        # If it's a string, try to parse it as JSON first, then fall back to comma-split
+        try:
+            parsed = json.loads(ingredients_data)
+            if isinstance(parsed, list):
+                ingredients_list = [str(item).strip() for item in parsed if item]
+            else:
+                # Not a list after parsing, split by comma
+                ingredients_list = [
+                    token.strip()
+                    for token in ingredients_data.split(",")
+                    if token.strip()
+                ]
+        except (json.JSONDecodeError, ValueError):
+            # Not valid JSON, split by comma
+            ingredients_list = [
+                token.strip() for token in ingredients_data.split(",") if token.strip()
+            ]
 
-    nutrition = data.get("nutrition") or {}
-    normalized = normalize_nutrition(nutrition)
+    # Fetch 'nutrition_data' 
+    nutrition_raw = data.get("nutrition_data") or {}
+    normalized = normalize_nutrition(nutrition_raw)
 
     risks: Dict[str, str] = {}
-    if isinstance(data.get("risks"), dict):
-        for name, label in data["risks"].items():
+    risks_data = data.get("risks")
+
+    # Handle case where risks might be a JSON string
+    if isinstance(risks_data, str):
+        try:
+            risks_data = json.loads(risks_data)
+        except (json.JSONDecodeError, ValueError):
+            risks_data = {}
+
+    if isinstance(risks_data, dict):
+        for name, label in risks_data.items():
             if (
                 isinstance(name, str)
                 and isinstance(label, str)
@@ -88,6 +115,16 @@ def analyze_label_with_profile(
     if summary_risk not in {"Low", "Medium", "High"}:
         summary_risk = "Low"
 
+    # Re-evaluate summary_risk based on actual ingredient risks
+    # If any ingredient is High risk, summary should be High
+    # If any ingredient is Medium risk (and no High), summary should be Medium
+    risk_values = list(risks.values())
+    if "High" in risk_values:
+        summary_risk = "High"
+    elif "Medium" in risk_values:
+        summary_risk = "Medium"
+    # else keep the AI's assessment or default "Low"
+
     return ingredients_list, normalized, risks, summary_explanation, summary_risk
 
 
@@ -95,19 +132,12 @@ def analyze_label_for_user(
     db: "Session", user_id: "UUID", raw_text: str, language: str = "en"
 ) -> Tuple[
     List[str],
-    Dict[str, Dict[str, Optional[float]]],
+    Dict[str, Any],
     Dict[str, str],
     str,
     str,
 ]:
-    """Analyze label for a specific user with their health profile.
-
-    Args:
-        db: Database session
-        user_id: User ID
-        raw_text: Raw OCR text from label
-        language: Language code for response ('en', 'tr', etc.)
-    """
+    """Analyze label for a specific user with their health profile."""
     profile = hp_service.get_health_profile_by_user(db, user_id)
     profile_dict: Optional[Dict[str, Any]] = None
     if profile:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 from typing import Any, Dict, List, Optional, Tuple
 from app.services.nutrition.openai_client import call_openai_json
@@ -10,74 +11,96 @@ from app.services.nutrition.prompt_templates import (
     build_user_prompt_parse,
 )
 
-
-EXPECTED_NUTRITION_KEYS = [
-    "energy",
-    "fat",
-    "saturated_fat",
-    "trans_fat",
-    "carbohydrate",
-    "sugars",
-    "dietary_fiber",
-    "protein",
-    "salt",
+EXPECTED_MACRO_KEYS = [
+    "energy_kcal",
+    "fat_total_g",
+    "fat_saturated_g",
+    "fat_trans_g",
+    "carbohydrate_g",
+    "sugar_g",
+    "fiber_g",
+    "protein_g",
+    "salt_g",
 ]
 
 
-def _to_number(value: Any) -> Optional[float]:
-    if value is None:
-        return None
-    if isinstance(value, (int, float)):
-        return float(value)
-    if isinstance(value, str):
-        match = re.search(r"[-+]?[0-9]+(?:[\.,][0-9]+)?", value)
-        if match:
-            try:
-                return float(match.group(0).replace(",", "."))
-            except (ValueError, TypeError):
-                return None
-    return None
+def normalize_nutrition(nutrition_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Validate and clean the nutrition_data structure returned by LLM.
+    Since LLM now handles the 'Priority Rule' (100g vs Portion),
+    we just ensure the structure is correct.
+    """
+    # Handle case where nutrition_data might be a JSON string
+    if isinstance(nutrition_data, str):
+        try:
+            nutrition_data = json.loads(nutrition_data)
+        except (json.JSONDecodeError, ValueError):
+            return {}
 
-
-def normalize_nutrition(
-    nutrition: Dict[str, Any],
-) -> Dict[str, Dict[str, Optional[float]]]:
-    if not isinstance(nutrition, dict):
+    if not isinstance(nutrition_data, dict):
         return {}
-    normalized: Dict[str, Dict[str, Optional[float]]] = {}
-    for key in EXPECTED_NUTRITION_KEYS:
-        entry = nutrition.get(key)
-        if isinstance(entry, dict):
-            per_100g = _to_number(entry.get("per_100g"))
-            per_portion = _to_number(entry.get("per_portion"))
-            normalized[key] = {
-                "per_100g": per_100g if per_100g is not None else None,
-                "per_portion": per_portion if per_portion is not None else None,
-            }
+
+    # Default structure
+    normalized = {
+        "basis": nutrition_data.get("basis", "Unknown"),
+        "is_normalized_100g": nutrition_data.get("is_normalized_100g", False),
+        "values": {},
+    }
+
+    raw_values = nutrition_data.get("values") or {}
+
+    # Process Macros (Fixed Keys)
+    clean_values = {}
+    for key in EXPECTED_MACRO_KEYS:
+        val = raw_values.get(key)
+        # Ensure it's a number or None
+        if isinstance(val, (int, float)):
+            clean_values[key] = val
+        else:
+            clean_values[key] = None
+
+    # Process Micros (Dynamic Keys) - Pass through if exists
+    micros = raw_values.get("micros")
+    if isinstance(micros, dict) and micros:
+        clean_values["micros"] = micros
+    else:
+        clean_values["micros"] = None
+
+    normalized["values"] = clean_values
     return normalized
 
 
 def parse_ocr_raw_text(
     raw_text: str,
-) -> Tuple[List[str], Dict[str, Dict[str, Optional[float]]]]:
+) -> Tuple[List[str], Dict[str, Any]]:
     """
-    Parse OCR raw text and return (ingredients_list, nutrition_map).
-
-    nutrition_map structure:
-      { label: {"per_100g": float|None, "per_portion": float|None }, ... }
+    Parse OCR raw text and return (ingredients_list, nutrition_data).
+    nutrition_data follows the schema:
+    { "basis": str, "is_normalized_100g": bool, "values": {...} }
     """
     system_prompt = build_system_prompt_parse()
     user_prompt = build_user_prompt_parse(raw_text)
     data = call_openai_json(system_prompt, user_prompt)
 
-    ingredients_plain = str(data.get("ingredients_plain_text", "")).strip()
-    ingredients_list = [
-        token.strip()
-        for token in ingredients_plain.split(",")
-        if token and token.strip()
-    ]
+    # Handle ingredients - could be a string or already a list
+    ingredients_data = data.get("ingredients_plain_text", "")
+    if isinstance(ingredients_data, list):
+        # Already a list, just clean it
+        ingredients_list = [str(item).strip() for item in ingredients_data if item]
+    elif isinstance(ingredients_data, str):
+        # String, split by comma
+        ingredients_plain = ingredients_data.strip()
+        ingredients_list = [
+            token.strip()
+            for token in ingredients_plain.split(",")
+            if token and token.strip()
+        ]
+    else:
+        # Unexpected type, return empty list
+        ingredients_list = []
 
-    nutrition = data.get("nutrition") or {}
-    normalized = normalize_nutrition(nutrition)
+    # LLM returns "nutrition_data" object directly now
+    nutrition_raw = data.get("nutrition_data") or {}
+    normalized = normalize_nutrition(nutrition_raw)
 
     return ingredients_list, normalized
