@@ -82,7 +82,7 @@ A powerful backend API for intelligent nutrition facts recognition and personali
 #### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/nutrition-facts-vision-api.git
+git clone https://github.com/ZiyaKolcu/nutrition-facts-vision-api.git
 cd nutrition-facts-vision-api
 ```
 
