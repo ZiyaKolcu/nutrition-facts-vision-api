@@ -548,7 +548,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Retrieval-Augmented Generation (RAG) integration
 - ChromaDB vector database integration
 - PDF ingestion and reference data pipeline
-- ***
 
 ---
 
