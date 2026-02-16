@@ -9,7 +9,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain_core.documents import Document
-from tqdm import tqdm  
+from tqdm import tqdm
 
 logging.basicConfig(
     level=logging.INFO,
@@ -26,14 +26,14 @@ CHROMA_PORT = int(os.getenv("CHROMA_PORT", "8000"))
 COLLECTION_NAME = "nutrition_knowledge"
 
 EMBEDDING_MODEL_NAME = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
-DEVICE = "cpu" 
+DEVICE = "cpu"
 
-CHUNK_SIZE = 800  
-CHUNK_OVERLAP = 150  
+CHUNK_SIZE = 800
+CHUNK_OVERLAP = 150
 
 
 def get_chroma_client():
-    """ChromaDB sunucusuna bağlanır ve istemciyi döndürür."""
+    """Connects to the ChromaDB server and returns the client."""
     logger.info(f"Connecting to ChromaDB at {CHROMA_HOST}:{CHROMA_PORT}...")
     try:
         client = chromadb.HttpClient(
@@ -41,7 +41,7 @@ def get_chroma_client():
             port=CHROMA_PORT,
             settings=Settings(allow_reset=True, anonymized_telemetry=False),
         )
-        # Bağlantı testi
+        # Connection test
         client.heartbeat()
         logger.info("Successfully connected to ChromaDB.")
         return client
@@ -51,19 +51,19 @@ def get_chroma_client():
 
 
 def setup_collection(client: chromadb.HttpClient, reset: bool = True):
-    """Koleksiyonu hazırlar. Reset=True ise eski veriyi siler."""
+    """Prepares the collection. If reset=True, deletes existing data."""
     if reset:
         try:
             client.delete_collection(COLLECTION_NAME)
             logger.warning(f"Deleted existing collection: {COLLECTION_NAME}")
         except Exception:
-            pass  
+            pass
 
     return client.get_or_create_collection(COLLECTION_NAME)
 
 
 def load_and_process_pdfs(directory: str) -> List[Document]:
-    """PDF dosyalarını bulur, metni okur ve metadata ile zenginleştirir."""
+    """Finds PDF files, reads the text, and enriches them with metadata."""
     if not os.path.exists(directory):
         logger.error(f"Directory not found: {directory}")
         return []
@@ -81,7 +81,7 @@ def load_and_process_pdfs(directory: str) -> List[Document]:
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=CHUNK_SIZE,
         chunk_overlap=CHUNK_OVERLAP,
-        separators=["\n\n", "\n", ". ", " ", ""], 
+        separators=["\n\n", "\n", ". ", " ", ""],
         length_function=len,
     )
 
@@ -118,7 +118,7 @@ def main():
     embedding_function = HuggingFaceEmbeddings(
         model_name=EMBEDDING_MODEL_NAME,
         model_kwargs={"device": DEVICE},
-        encode_kwargs={"normalize_embeddings": True},  
+        encode_kwargs={"normalize_embeddings": True},
     )
 
     docs = load_and_process_pdfs(PDF_SOURCE_DIR)
@@ -129,8 +129,7 @@ def main():
 
     logger.info("Uploading vectors to ChromaDB...")
 
-    BATCH_SIZE = 100  
-    total_batches = (len(docs) // BATCH_SIZE) + 1
+    BATCH_SIZE = 100
 
     for i in tqdm(range(0, len(docs), BATCH_SIZE), desc="Uploading Batches"):
         batch = docs[i : i + BATCH_SIZE]
