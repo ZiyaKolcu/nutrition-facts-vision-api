@@ -17,6 +17,8 @@ A powerful backend API for intelligent nutrition facts recognition and personali
 
 **Nutrition Facts Vision** is an innovative solution that helps users make informed dietary decisions by analyzing packaged food labels through their mobile devices. The system combines computer vision, natural language processing, and personalized health profiling to deliver actionable nutritional insights.
 
+**Note:** The experimental results reported in the submitted manuscript correspond to tag v1.0-paper-submission. The main branch includes post-submission architectural improvements.
+
 ### Key Features
 
 - **OCR-Powered Label Recognition** - Extracts text from food label images using Google ML Kit
@@ -535,12 +537,19 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ### v1.0.0 (Current)
 
-- Initial release
 - Core OCR and analysis functionality
 - User authentication and health profiles
 - Chatbot integration
 - Scan history management
+- Corresponds to tag v1.0-paper-submission
+
+### v1.1.0 – Post-Submission Enhancements
+
+- Retrieval-Augmented Generation (RAG) integration
+- ChromaDB vector database integration
+- PDF ingestion and reference data pipeline
+- ***
 
 ---
 
-**Last Updated:** December 2025
+**Last Updated:** February 2026
