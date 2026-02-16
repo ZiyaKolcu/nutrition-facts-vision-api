@@ -6,8 +6,6 @@ python-dotenv
 firebase_admin
 openai
 chromadb==0.4.24
-sentence-transformers==2.5.1
-torch==2.2.1 --index-url https://download.pytorch.org/whl/cpu 
 pymupdf==1.23.26
 langchain==0.1.12
 langchain-community==0.0.28
